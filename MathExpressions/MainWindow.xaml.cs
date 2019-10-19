@@ -27,7 +27,7 @@ namespace MathExpressions
             //
             //
             //
-            string expressions = "5+((1+2)*4)-3";// 5 + ((1 + 2) * 4) - 3
+            string expressions = "5++((1+2)*4)-3";// 5 + ((1 + 2) * 4) - 3
 
             //
             // Список доступных операций с весом (приоритетом) операции
@@ -40,14 +40,26 @@ namespace MathExpressions
                 new OperationWeight { Symbol = '-', Weight = 2 },
                 new OperationWeight { Symbol = '(', Weight = 1 },
                 new OperationWeight { Symbol = ')', Weight = 1 },
-            };
+            };            
 
+            string rpn = ConvertInfixToRPN(expressions, operations);
+
+            //ПРоверить выходную строку на наличие скобок;
+
+        }
+
+        private static string ConvertInfixToRPN(string expressions, List<OperationWeight> operations)
+        {
             //
             // Объект для хранения результирующей строки
             //
             var RPNBuilder = new StringBuilder();
 
-            Stack<OperationWeight> operationStack = new Stack<OperationWeight>();           
+            //
+            // Стек для хранения операций
+            //
+            var operationStack = new Stack<OperationWeight>();
+
 
             for (int i = 0; i < expressions.Length; i++)
             {
@@ -63,12 +75,19 @@ namespace MathExpressions
                     RPNBuilder.Append(";");
 
                     while (operationStack.Count > 0 && operationStack.Peek().Symbol != '(')
-                    {                        
-                        RPNBuilder.Append(operationStack.Pop().Symbol);                        
+                    {
+                        RPNBuilder.Append(operationStack.Pop().Symbol);
                     }
 
                     // del '('
-                    operationStack.Pop();
+                    try
+                    {
+                        operationStack.Pop();
+                    }
+                    catch (System.InvalidOperationException)
+                    {
+                        MessageBox.Show("Обнаружена лишняя закрывающая скобка");
+                    }
                 }
                 else if (operations.Where(x => x.Symbol == symbol).Any())
                 {
@@ -77,26 +96,27 @@ namespace MathExpressions
                     RPNBuilder.Append(";");
 
                     while (operationStack.Count > 0 && operationStack.Peek().Weight >= operation.Weight)
-                    {                        
-                        RPNBuilder.Append(operationStack.Pop().Symbol);                        
+                    {
+                        RPNBuilder.Append(operationStack.Pop().Symbol);
                     }
 
                     operationStack.Push(operation);
                 }
                 else
-                {                    
+                {
                     RPNBuilder.Append(symbol);
-                }                
+                }
             }
 
             RPNBuilder.Append(";");
 
             while (operationStack.Count > 0)
-            {                
+            {
                 RPNBuilder.Append(operationStack.Pop().Symbol);
                 RPNBuilder.Append(";");
             }
-            Console.WriteLine(RPNBuilder.ToString());
+
+            return RPNBuilder.ToString();
         }
     }
 }
