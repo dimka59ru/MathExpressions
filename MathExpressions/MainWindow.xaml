@@ -20,7 +20,9 @@
             <Label Content="Формулы"/>
             
             <!--Таблица с формулами-->
-            <ListBox ItemsSource="{Binding Formulas}" Margin="2,0,2,4" >
+            <ListBox ItemsSource="{Binding Formulas}"
+                     DisplayMemberPath="Infix"
+                     Margin="2,0,2,4" >
 
             </ListBox>
 

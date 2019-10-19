@@ -9,6 +9,6 @@ namespace MathExpressions.Models
     public class FormulaModel
     {
         public int Id { get; set; }
-        public int Infix { get; set; }
+        public string Infix { get; set; }
     }
 }

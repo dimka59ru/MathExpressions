@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MathExpressions.Models;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -21,7 +22,7 @@ namespace MathExpressions
     /// </summary>
     public partial class MainWindow : Window
     {
-        public ObservableCollection<string> Formulas { get; } = new ObservableCollection<string>();
+        public ObservableCollection<FormulaModel> Formulas { get; } = new ObservableCollection<FormulaModel>();
 
         public MainWindow()
         {
@@ -32,10 +33,18 @@ namespace MathExpressions
             //
             string expressions = "5+((1+2)*4)-3";// 5 + ((1 + 2) * 4) - 3
 
-            Formulas.Add(expressions);
-            Formulas.Add("a*b");
-            Formulas.Add("(b+c)*d");
+            //Formulas.Add(expressions);
+            //Formulas.Add("a*b");
+            //Formulas.Add("(b+c)*d");
 
+            var formulas = SqliteDataAccess.LoadFormulas();
+
+            foreach (var formula in formulas)
+            {
+                Formulas.Add(formula);
+            }
+
+            
             //
             // Список доступных операций с весом (приоритетом) операции
             //
