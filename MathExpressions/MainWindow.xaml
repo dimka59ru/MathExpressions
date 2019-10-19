@@ -7,6 +7,39 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.5*"/>
+            <ColumnDefinition Width="0.5*"/>
+        </Grid.ColumnDefinitions>
+        <!--<Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>-->
+
+        <StackPanel Grid.Column="0" Orientation="Vertical">
+            <Label Content="Формулы"/>
+            
+            <!--Таблица с формулами-->
+            <ListBox ItemsSource="{Binding Formulas}" Margin="2,0,2,4" >
+
+            </ListBox>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,2,0">
+                <Button Content="Добавить формулу" VerticalAlignment="Center" Height="24" Padding="5,1"></Button>
+                <Button Content="Вычислить" Margin="4,0,0,0" VerticalAlignment="Center" Height="24" Padding="5,1"></Button>
+            </StackPanel>
+        </StackPanel>        
+        
+        
+        <!--Таблица для ввода значений параметров формулы-->
+        <DataGrid Grid.Column="1" Margin="2" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Параметр"/>
+                <DataGridTextColumn Header="Значение параметра"/>
+            </DataGrid.Columns>
+
+        </DataGrid>
+
         
     </Grid>
 </Window>

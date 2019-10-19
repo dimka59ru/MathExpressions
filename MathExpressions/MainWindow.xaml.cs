@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,6 +21,8 @@ namespace MathExpressions
     /// </summary>
     public partial class MainWindow : Window
     {
+        public ObservableCollection<string> Formulas { get; } = new ObservableCollection<string>();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -27,7 +30,11 @@ namespace MathExpressions
             //
             //
             //
-            string expressions = "5++((1+2)*4)-3";// 5 + ((1 + 2) * 4) - 3
+            string expressions = "5+((1+2)*4)-3";// 5 + ((1 + 2) * 4) - 3
+
+            Formulas.Add(expressions);
+            Formulas.Add("a*b");
+            Formulas.Add("(b+c)*d");
 
             //
             // Список доступных операций с весом (приоритетом) операции
@@ -45,6 +52,9 @@ namespace MathExpressions
             string rpn = ConvertInfixToRPN(expressions, operations);
 
             //ПРоверить выходную строку на наличие скобок;
+
+
+            DataContext = this;
 
         }
 
