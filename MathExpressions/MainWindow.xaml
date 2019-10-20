@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MathExpressions"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="500">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="0.5*"/>
@@ -20,24 +20,26 @@
             <Label Content="Формулы"/>
             
             <!--Таблица с формулами-->
-            <ListBox ItemsSource="{Binding Formulas}"
+            <ListBox x:Name="ListOfFormulas"
+                ItemsSource="{Binding Formulas}"
                      DisplayMemberPath="Infix"
-                     Margin="2,0,2,4" >
+                     Margin="2,0,2,4" SelectionChanged="ListOfFormulas_SelectionChanged" >
 
             </ListBox>
 
             <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,2,0">
                 <Button Content="Добавить формулу" VerticalAlignment="Center" Height="24" Padding="5,1"></Button>
-                <Button Content="Вычислить" Margin="4,0,0,0" VerticalAlignment="Center" Height="24" Padding="5,1"></Button>
+                <Button x:Name="CalculateButton" Content="Вычислить" Margin="4,0,0,0" VerticalAlignment="Center" Height="24" Padding="5,1" Click="CalculateButton_Click"></Button>
             </StackPanel>
         </StackPanel>        
         
         
         <!--Таблица для ввода значений параметров формулы-->
-        <DataGrid Grid.Column="1" Margin="2" AutoGenerateColumns="False">
+        <DataGrid Grid.Column="1" Margin="2" AutoGenerateColumns="False"
+                 ItemsSource="{Binding Params}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Параметр"/>
-                <DataGridTextColumn Header="Значение параметра"/>
+                <DataGridTextColumn Header="Параметр" Binding="{Binding Param}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Значение параметра" Binding="{Binding Value}"/>
             </DataGrid.Columns>
 
         </DataGrid>

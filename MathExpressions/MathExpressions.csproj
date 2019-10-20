@@ -67,6 +67,8 @@
     <Content Include="mathexpressions.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Compile Include="Models\OperationModel.cs" />
+    <Compile Include="Models\ParamModel.cs" />
     <Compile Include="SqliteDataAccess.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
