@@ -138,6 +138,8 @@ namespace MathExpressions
                 RPNBuilder.Append(";");
             }
 
+            var rpnArray = RPNBuilder.ToString().Split(';');
+
             return RPNBuilder.ToString();
         }
 
@@ -170,24 +172,6 @@ namespace MathExpressions
                 // Длина формулы
                 int lenFormula = Params.Count + operations.Count;
 
-                // Формируем массив с формулой в обратной польской нотации
-
-                // может и не нужно..можно сразу перейти к вычислению..
-                string[] formulaRPN = new string[lenFormula];
-
-                for (int i = 0; i < lenFormula; i++)
-                {
-                    if (Params.SingleOrDefault(x => x.Position == i) != null)
-                    {
-                        formulaRPN[i] = Params.SingleOrDefault(x => x.Position == i).Param;
-                    }
-
-                    if (operations.SingleOrDefault(x => x.Position == i) != null)
-                    {
-                        formulaRPN[i] = operations.SingleOrDefault(x => x.Position == i).Operation;
-                    }
-                }
-
                 // Обработать ошибку опустошения стека
                 // Обработать ошибку деления на 0
 
@@ -206,8 +190,6 @@ namespace MathExpressions
                         
                         double value2 = stack.Pop();
                         double value1 = stack.Pop();
-
-
 
                         if (operation == "+")
                         {
@@ -233,7 +215,9 @@ namespace MathExpressions
                     }
                 }
 
-                Console.WriteLine(stack.Pop());
+                var result = stack.Pop();
+                Result_TextBox.Text = "";
+                Result_TextBox.Text = result.ToString();
             }
 
         }
