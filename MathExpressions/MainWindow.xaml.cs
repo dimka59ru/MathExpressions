@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -33,12 +34,7 @@ namespace MathExpressions
             //
             //
             //
-            string expressions = "5+((1+2)*4)-3";// 5 + ((1 + 2) * 4) - 3
-
-
-            //Formulas.Add(expressions);
-            //Formulas.Add("a*b");
-            //Formulas.Add("(b+c)*d");
+            string expressions = "a + ( b - c ) * d";// 5 + ((1 + 2) * 4) - 3            
 
             var formulas = SqliteDataAccess.LoadFormulas();
 
@@ -63,7 +59,7 @@ namespace MathExpressions
 
             string rpn = ConvertInfixToRPN(expressions, operations);
 
-            //ПРоверить выходную строку на наличие скобок;
+            //Проверить выходную строку на наличие скобок;
 
 
             DataContext = this;
@@ -72,16 +68,19 @@ namespace MathExpressions
 
         private static string ConvertInfixToRPN(string expressions, List<OperationWeight> operations)
         {
+
             //
             // Объект для хранения результирующей строки
-            //
-            var RPNBuilder = new StringBuilder();
+            //            
+            var rpn = new List<string>();            
 
             //
             // Стек для хранения операций
             //
             var operationStack = new Stack<OperationWeight>();
 
+            // Удалим пробелы из выражения
+            expressions = Regex.Replace(expressions, @"\s+", "");
 
             for (int i = 0; i < expressions.Length; i++)
             {
@@ -94,11 +93,9 @@ namespace MathExpressions
                 }
                 else if (symbol == ')')
                 {
-                    RPNBuilder.Append(";");
-
                     while (operationStack.Count > 0 && operationStack.Peek().Symbol != '(')
-                    {
-                        RPNBuilder.Append(operationStack.Pop().Symbol);
+                    {                        
+                        rpn.Add(operationStack.Pop().Symbol.ToString());
                     }
 
                     // del '('
@@ -113,34 +110,30 @@ namespace MathExpressions
                 }
                 else if (operations.Where(x => x.Symbol == symbol).Any())
                 {
-                    var operation = operations.Where(x => x.Symbol == symbol).First();
-
-                    RPNBuilder.Append(";");
+                    var operation = operations.Where(x => x.Symbol == symbol).First();                    
 
                     while (operationStack.Count > 0 && operationStack.Peek().Weight >= operation.Weight)
-                    {
-                        RPNBuilder.Append(operationStack.Pop().Symbol);
+                    {                        
+                        rpn.Add(operationStack.Pop().Symbol.ToString());
                     }
 
                     operationStack.Push(operation);
                 }
                 else
-                {
-                    RPNBuilder.Append(symbol);
+                {                    
+                    rpn.Add(symbol.ToString());
                 }
             }
-
-            RPNBuilder.Append(";");
+            
 
             while (operationStack.Count > 0)
-            {
-                RPNBuilder.Append(operationStack.Pop().Symbol);
-                RPNBuilder.Append(";");
+            {                
+                rpn.Add(operationStack.Pop().Symbol.ToString());                
             }
 
-            var rpnArray = RPNBuilder.ToString().Split(';');
+            
 
-            return RPNBuilder.ToString();
+            return "";
         }
 
         /// <summary>
@@ -155,6 +148,7 @@ namespace MathExpressions
 
                 Params.Clear();
 
+                // Переносим параметры для отображения в окне
                 foreach (var param in _params)
                 {
                     Params.Add(param);
