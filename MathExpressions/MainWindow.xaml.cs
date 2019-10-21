@@ -31,110 +31,27 @@ namespace MathExpressions
         {
             InitializeComponent();
 
-            //
-            //
-            //
-            string expressions = "a + ( b - c ) * d";// 5 + ((1 + 2) * 4) - 3            
-
-            var formulas = SqliteDataAccess.LoadFormulas();
-
-            foreach (var formula in formulas)
-            {
-                Formulas.Add(formula);
-            }
-
-            //
-            // Список доступных операций с весом (приоритетом) операции
-            //
-            List<OperationWeight> operations = new List<OperationWeight>
-            {
-            new OperationWeight { Symbol = '*', Weight = 3 },
-            new OperationWeight { Symbol = '/', Weight = 3 },
-            new OperationWeight { Symbol = '+', Weight = 2 },
-            new OperationWeight { Symbol = '-', Weight = 2 },
-            new OperationWeight { Symbol = '(', Weight = 1 },
-            new OperationWeight { Symbol = ')', Weight = 1 },
-            };
-
-
-            string rpn = ConvertInfixToRPN(expressions, operations);
-
-            //Проверить выходную строку на наличие скобок;
-
+            UpdateFormulasOnDisplay();
 
             DataContext = this;
 
         }
 
-        private static string ConvertInfixToRPN(string expressions, List<OperationWeight> operations)
+        /// <summary>
+        /// Обновляет список формул на экране из БД
+        /// </summary>
+        private void UpdateFormulasOnDisplay()
         {
+            var formulas = SqliteDataAccess.LoadFormulas();
 
-            //
-            // Объект для хранения результирующей строки
-            //            
-            var rpn = new List<string>();            
+            Formulas.Clear();
 
-            //
-            // Стек для хранения операций
-            //
-            var operationStack = new Stack<OperationWeight>();
-
-            // Удалим пробелы из выражения
-            expressions = Regex.Replace(expressions, @"\s+", "");
-
-            for (int i = 0; i < expressions.Length; i++)
+            foreach (var formula in formulas)
             {
-                var symbol = expressions[i];
-
-                if (symbol == '(')
-                {
-                    var operation = operations.First(x => x.Symbol == symbol);
-                    operationStack.Push(operation);
-                }
-                else if (symbol == ')')
-                {
-                    while (operationStack.Count > 0 && operationStack.Peek().Symbol != '(')
-                    {                        
-                        rpn.Add(operationStack.Pop().Symbol.ToString());
-                    }
-
-                    // del '('
-                    try
-                    {
-                        operationStack.Pop();
-                    }
-                    catch (System.InvalidOperationException)
-                    {
-                        MessageBox.Show("Обнаружена лишняя закрывающая скобка");
-                    }
-                }
-                else if (operations.Where(x => x.Symbol == symbol).Any())
-                {
-                    var operation = operations.Where(x => x.Symbol == symbol).First();                    
-
-                    while (operationStack.Count > 0 && operationStack.Peek().Weight >= operation.Weight)
-                    {                        
-                        rpn.Add(operationStack.Pop().Symbol.ToString());
-                    }
-
-                    operationStack.Push(operation);
-                }
-                else
-                {                    
-                    rpn.Add(symbol.ToString());
-                }
+                Formulas.Add(formula);
             }
-            
-
-            while (operationStack.Count > 0)
-            {                
-                rpn.Add(operationStack.Pop().Symbol.ToString());                
-            }
-
-            
-
-            return "";
         }
+
 
         /// <summary>
         /// Срабатывает при выборе формулы
@@ -214,6 +131,166 @@ namespace MathExpressions
                 Result_TextBox.Text = result.ToString();
             }
 
+        }
+
+        private void AddFormulaButton_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new InputFormulaDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                string expression = dialog.FormulaText;
+
+                // Проверим реуглярным выражением введенные символы
+                bool isValid = Regex.IsMatch(expression, @"^[a-zA-Z\d\s\+\-\/\*\(\)]+$");
+
+                if (!isValid)
+                {
+                    MessageBox.Show("В формуле обнаружены недопустимые символы!", 
+                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // Проверим правильность расстановки скобок
+                if (!IsBracketsCorrect(expression))
+                {
+                    MessageBox.Show("В формуле обнаружены ошибки, проверьте скобки!",
+                                            "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                
+                
+                try
+                {
+                    // Переведем формулу в обратную польскую нотацию
+                    var rpn = ConvertInfixToRPN(expression);
+
+                    // Сохраним в базу данных результат
+                    SqliteDataAccess.AddFormula(expression, rpn);
+
+                    // Обновим данные на экране
+                    UpdateFormulasOnDisplay();
+                }
+                catch (System.InvalidOperationException)
+                {
+                    MessageBox.Show("В формуле обнаружены ошибки, проверьте скобки!", 
+                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private bool IsBracketsCorrect(string expression)
+        {
+            bool isCorrect = true;
+            Stack<char> stack = new Stack<char>();
+
+            foreach (var item in expression.ToCharArray())
+            {
+                if (item == '(')
+                {
+                    stack.Push(item);
+                }
+                else if (item == ')')
+                {
+                    if (stack.Count == 0)
+                    {
+                        isCorrect = false;
+                        break;
+                    }                                     
+                    
+                    stack.Pop();                    
+                }
+            }
+
+            if (stack.Count > 0)
+            {
+                isCorrect = false;
+            }
+
+            return isCorrect;
+        }
+
+        private static string[] ConvertInfixToRPN(string expression)
+        {
+            //
+            // Список доступных операций с весом (приоритетом) операции
+            //
+            List<OperationWeight> operations = new List<OperationWeight>
+            {
+            new OperationWeight { Symbol = '*', Weight = 3 },
+            new OperationWeight { Symbol = '/', Weight = 3 },
+            new OperationWeight { Symbol = '+', Weight = 2 },
+            new OperationWeight { Symbol = '-', Weight = 2 },
+            new OperationWeight { Symbol = '(', Weight = 1 },
+            new OperationWeight { Symbol = ')', Weight = 1 },
+            };
+
+
+            //
+            // Объект для хранения результирующей строки
+            //            
+            var rpnBuilder = new StringBuilder();
+
+            //
+            // Стек для хранения операций
+            //
+            var operationStack = new Stack<OperationWeight>();
+
+            // Удалим пробелы из выражения
+            expression = Regex.Replace(expression, @"\s+", "");
+
+            for (int i = 0; i < expression.Length; i++)
+            {
+                var symbol = expression[i];
+
+                if (symbol == '(')
+                {
+                    var operation = operations.First(x => x.Symbol == symbol);
+                    operationStack.Push(operation);
+                }
+                else if (symbol == ')')
+                {
+                    rpnBuilder.Append(";");
+                    while (operationStack.Count > 0 && operationStack.Peek().Symbol != '(')
+                    {
+                        rpnBuilder.Append(operationStack.Pop().Symbol.ToString());
+                    }
+
+                    // del '('                    
+                    operationStack.Pop();
+
+                }
+                else if (operations.Where(x => x.Symbol == symbol).Any())
+                {
+                    var operation = operations.Where(x => x.Symbol == symbol).First();
+                    rpnBuilder.Append(";");
+                    while (operationStack.Count > 0 && operationStack.Peek().Weight >= operation.Weight)
+                    {
+                        rpnBuilder.Append(operationStack.Pop().Symbol.ToString());
+                        rpnBuilder.Append(";");
+                    }
+
+                    operationStack.Push(operation);
+                }
+                else
+                {
+                    rpnBuilder.Append(symbol.ToString());
+                }
+            }
+
+            while (operationStack.Count > 0)
+            {
+                rpnBuilder.Append(";");
+                rpnBuilder.Append(operationStack.Pop().Symbol.ToString());
+
+            }
+
+            var rpnString = rpnBuilder.ToString();
+
+            //if (rpnString.Contains("("))
+            //    throw new System.InvalidOperationException();
+
+            var rpnArray = rpnString.Split(';');
+            return rpnArray;
         }
     }
 }

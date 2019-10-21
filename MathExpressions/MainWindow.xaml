@@ -29,7 +29,7 @@
         </ListBox>
 
         <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,2,0">
-            <Button Content="Добавить формулу" VerticalAlignment="Center" Height="24" Padding="5,1"></Button>
+            <Button x:Name="AddFormulaButton" Content="Добавить формулу" VerticalAlignment="Center" Height="24" Padding="5,1" Click="AddFormulaButton_Click"></Button>
             <Button x:Name="CalculateButton" Content="Вычислить" Margin="4,0,0,0" VerticalAlignment="Center" Height="24" Padding="5,1" Click="CalculateButton_Click"></Button>
         </StackPanel>
 

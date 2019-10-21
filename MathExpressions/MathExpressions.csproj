@@ -67,9 +67,16 @@
     <Content Include="mathexpressions.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Compile Include="InputFormulaDialog.xaml.cs">
+      <DependentUpon>InputFormulaDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Models\OperationModel.cs" />
     <Compile Include="Models\ParamModel.cs" />
     <Compile Include="SqliteDataAccess.cs" />
+    <Page Include="InputFormulaDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
