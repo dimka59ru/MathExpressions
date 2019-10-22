@@ -103,7 +103,7 @@ namespace MathExpressions.Models
         /// <summary>
         /// Перевод обычного вида формулы в обратную польскую нотацию
         /// </summary>        
-        private string[] ConvertInfixToRPN(string expression)
+        public string[] ConvertInfixToRPN(string expression)
         {
             //
             // Объект для хранения результирующей строки
