@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -13,19 +15,27 @@ namespace MathExpressions
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
         /// <summary>
         /// Коллекция формул для отображения
         /// </summary>
-        public ObservableCollection<FormulaModel> Formulas { get; } = new ObservableCollection<FormulaModel>();
+        public ObservableCollection<Formula> Formulas { get; } = new ObservableCollection<Formula>();
+                
+        private Formula selectedFormula;
+                        
+        public Formula SelectedFormula
+        {
+            get { return selectedFormula; }
+            set
+            {
+                selectedFormula = value;
+                OnPropertyChanged("SelectedFormula");
+            }
+        }
 
-        /// <summary>
-        /// Коллекция для отображения параметров формулы
-        /// </summary>
-        public ObservableCollection<ParamModel> Params { get; } = new ObservableCollection<ParamModel>();
 
-        
+
 
         public MainWindow()
         {
@@ -50,88 +60,29 @@ namespace MathExpressions
             {
                 Formulas.Add(formula);
             }
+
+            Result_TextBox.Text = "";
         }
-
-
-        /// <summary>
-        /// Срабатывает при выборе формулы
-        /// </summary>        
-        private void ListOfFormulas_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (ListOfFormulas.SelectedItem is FormulaModel selectedItem)
-            {
-                // Загружаем параметры формулы из БД
-                var _params = SqliteDataAccess.LoadParams(selectedItem.Id);
-
-                Params.Clear();
-
-                // Переносим параметры для отображения в окне
-                foreach (var param in _params)
-                {
-                    Params.Add(param);
-                }                
-            }          
-        }
+        
 
         private void CalculateButton_Click(object sender, RoutedEventArgs e)
         {
-            if (ListOfFormulas.SelectedItem is FormulaModel selectedItem)
+            if (SelectedFormula != null)
             {
-                // Загружаем операции для формулы
-                var operations = SqliteDataAccess.LoadOperations(selectedItem.Id);
-
-                // Длина формулы
-                int lenFormula = Params.Count + operations.Count;
-
-                // Обработать ошибку опустошения стека
-                // Обработать ошибку деления на 0
-
-                var stack = new Stack<double>();
-                // Вычисляем
-                for (int i = 0; i < lenFormula; i++)
-                {
-                    if (Params.SingleOrDefault(x => x.Position == i) != null)
-                    {
-                        double value = Convert.ToDouble(Params.SingleOrDefault(x => x.Position == i).Value);
-                        stack.Push(value);
-                    }
-                    else if (operations.SingleOrDefault(x => x.Position == i) != null)
-                    {
-                        var operation = operations.SingleOrDefault(x => x.Position == i).Operation;
-                        
-                        double value2 = stack.Pop();
-                        double value1 = stack.Pop();
-
-                        if (operation == "+")
-                        {
-                            stack.Push(value1 + value2);
-                        }
-                        else if (operation == "-")
-                        {
-                            stack.Push(value1 - value2);
-                        }
-                        else if (operation == "*")
-                        {
-                            stack.Push(value1 * value2);
-                        }
-                        else if (operation == "/")
-                        {
-                            if (value2 == 0.0)
-                            {
-                                throw new DivideByZeroException("Нельзя делить на 0!");
-                            }
-
-                            stack.Push(value1 / value2);
-                        }                        
-                    }
-                }
-
-                var result = stack.Pop();
                 Result_TextBox.Text = "";
-                Result_TextBox.Text = result.ToString();
+                try
+                {
+                    var result = SelectedFormula.Solve();
+                    Result_TextBox.Text = result.ToString();
+                }
+                catch (DivideByZeroException ex)
+                {
+                    MessageBox.Show(ex.Message,
+                        "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }                
             }
-
         }
+
 
         private void AddFormulaButton_Click(object sender, RoutedEventArgs e)
         {
@@ -161,11 +112,10 @@ namespace MathExpressions
                 
                 try
                 {
-                    // Переведем формулу в обратную польскую нотацию
-                    var rpn = ConvertInfixToRPN(expression);
+                    var formula = new Formula(expression);                    
 
                     // Сохраним в базу данных результат
-                    SqliteDataAccess.AddFormula(expression, rpn);
+                    SqliteDataAccess.AddFormula(formula);
 
                     // Обновим данные на экране
                     UpdateFormulasOnDisplay();
@@ -178,7 +128,10 @@ namespace MathExpressions
             }
         }
 
-        private bool IsBracketsCorrect(string expression)
+        /// <summary>
+        /// Проверка на корректную расстановку скобок
+        /// </summary>        
+        private static bool IsBracketsCorrect(string expression)
         {
             bool isCorrect = true;
             Stack<char> stack = new Stack<char>();
@@ -209,88 +162,11 @@ namespace MathExpressions
             return isCorrect;
         }
 
-        private static string[] ConvertInfixToRPN(string expression)
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        public void OnPropertyChanged([CallerMemberName]string prop = "")
         {
-            //
-            // Список доступных операций с весом (приоритетом) операции
-            //
-            List<OperationWeight> operations = new List<OperationWeight>
-            {
-            new OperationWeight { Symbol = '*', Weight = 3 },
-            new OperationWeight { Symbol = '/', Weight = 3 },
-            new OperationWeight { Symbol = '+', Weight = 2 },
-            new OperationWeight { Symbol = '-', Weight = 2 },
-            new OperationWeight { Symbol = '(', Weight = 1 },
-            new OperationWeight { Symbol = ')', Weight = 1 },
-            };
-
-
-            //
-            // Объект для хранения результирующей строки
-            //            
-            var rpnBuilder = new StringBuilder();
-
-            //
-            // Стек для хранения операций
-            //
-            var operationStack = new Stack<OperationWeight>();
-
-            // Удалим пробелы из выражения
-            expression = Regex.Replace(expression, @"\s+", "");
-
-            for (int i = 0; i < expression.Length; i++)
-            {
-                var symbol = expression[i];
-
-                if (symbol == '(')
-                {
-                    var operation = operations.First(x => x.Symbol == symbol);
-                    operationStack.Push(operation);
-                }
-                else if (symbol == ')')
-                {
-                    rpnBuilder.Append(";");
-                    while (operationStack.Count > 0 && operationStack.Peek().Symbol != '(')
-                    {
-                        rpnBuilder.Append(operationStack.Pop().Symbol.ToString());
-                    }
-
-                    // del '('                    
-                    operationStack.Pop();
-
-                }
-                else if (operations.Where(x => x.Symbol == symbol).Any())
-                {
-                    var operation = operations.Where(x => x.Symbol == symbol).First();
-                    rpnBuilder.Append(";");
-                    while (operationStack.Count > 0 && operationStack.Peek().Weight >= operation.Weight)
-                    {
-                        rpnBuilder.Append(operationStack.Pop().Symbol.ToString());
-                        rpnBuilder.Append(";");
-                    }
-
-                    operationStack.Push(operation);
-                }
-                else
-                {
-                    rpnBuilder.Append(symbol.ToString());
-                }
-            }
-
-            while (operationStack.Count > 0)
-            {
-                rpnBuilder.Append(";");
-                rpnBuilder.Append(operationStack.Pop().Symbol.ToString());
-
-            }
-
-            var rpnString = rpnBuilder.ToString();
-
-            //if (rpnString.Contains("("))
-            //    throw new System.InvalidOperationException();
-
-            var rpnArray = rpnString.Split(';');
-            return rpnArray;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
     }
 }

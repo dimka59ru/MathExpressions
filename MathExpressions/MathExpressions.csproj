@@ -70,6 +70,7 @@
     <Compile Include="InputFormulaDialog.xaml.cs">
       <DependentUpon>InputFormulaDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Models\Formula.cs" />
     <Compile Include="Models\OperationModel.cs" />
     <Compile Include="Models\ParamModel.cs" />
     <Compile Include="SqliteDataAccess.cs" />
@@ -91,7 +92,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Models\FormulaModel.cs" />
     <Compile Include="OperationWeight.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

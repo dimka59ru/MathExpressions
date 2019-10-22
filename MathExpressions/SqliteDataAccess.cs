@@ -2,6 +2,7 @@
 using MathExpressions.Models;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Data;
 using System.Data.SQLite;
@@ -16,13 +17,19 @@ namespace MathExpressions
         /// <summary>
         /// Загрузка всех формул из БД
         /// </summary>        
-        public static List<FormulaModel> LoadFormulas()
+        public static List<Formula> LoadFormulas()
         {
             using (IDbConnection cnn = new SQLiteConnection(LoadConnectionString()))
             {
                 string sql = "SELECT * FROM formulas";
-                var output = cnn.Query<FormulaModel>(sql, new DynamicParameters());
-                return output.ToList();
+                var formulas = cnn.Query<Formula>(sql, new DynamicParameters()).ToList();
+
+                foreach (var formula in formulas)
+                {
+                    formula.Params = new ObservableCollection<ParamModel>(LoadParams(formula.Id));
+                    formula.Operations = LoadOperations(formula.Id);
+                }
+                return formulas;
             }
         }
 
@@ -55,19 +62,22 @@ namespace MathExpressions
         /// <summary>
         /// Добавление формулы в базу данных
         /// </summary>        
-        public static void AddFormula(string expression, string[] rpn)
+        public static void AddFormula(Formula formula)
         {
             using (IDbConnection cnn = new SQLiteConnection(LoadConnectionString()))
             {
-                string sql = "INSERT INTO formulas (infix) VALUES (@expression)";
-                var affectedRows = cnn.Execute(sql, new { expression });
+                string sql = "INSERT INTO formulas (infix) VALUES (@Infix)";
+                var affectedRows = cnn.Execute(sql, new { formula.Infix });
 
                 sql = "SELECT MAX(id) FROM formulas";
                 int lastId = cnn.QuerySingle<int>(sql);
 
+                var rpn = formula.RPN;
+
                 for (int i = 0; i < rpn.Length; i++)
                 {
-                    if (rpn[i] == "+" || rpn[i] == "-" || rpn[i] == "*" || rpn[i] == "/")
+                    // Если символ - это операция (+, -, * и т.д.)
+                    if (Formula.AvailableOperations.Where(x => x.Symbol.ToString() == rpn[i]).Any())
                     {
                         sql = @"INSERT INTO operations (id_formula, operation, position) 
                                     VALUES (@id_formula, @value, @position)";                        

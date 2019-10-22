@@ -22,9 +22,10 @@
             
         <!--Таблица с формулами-->
         <ListBox x:Name="ListOfFormulas" Grid.Row="1" Grid.Column="0"
-            ItemsSource="{Binding Formulas}"
+                    ItemsSource="{Binding Formulas}"
+                    SelectedItem="{Binding SelectedFormula}"
                     DisplayMemberPath="Infix"
-                    Margin="2,0,2,4" SelectionChanged="ListOfFormulas_SelectionChanged" >
+                    Margin="2,0,2,4" >
 
         </ListBox>
 
@@ -40,7 +41,7 @@
         <Label Content="Параметры формулы" Grid.Row="0" Grid.Column="1"/>
         <!--Таблица для ввода значений параметров формулы-->
         <DataGrid  AutoGenerateColumns="False" Grid.Row="1" Grid.Column="1"
-                ItemsSource="{Binding Params}" Margin="2,0,2,4">
+                ItemsSource="{Binding SelectedFormula.Params}" Margin="2,0,2,4">
         <DataGrid.Columns>
             <DataGridTextColumn Header="Параметр" Binding="{Binding Param}" IsReadOnly="True"/>
             <DataGridTextColumn Header="Значение параметра" Binding="{Binding Value}"/>
