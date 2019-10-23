@@ -21,7 +21,8 @@ namespace MathExpressions
         /// Коллекция формул для отображения
         /// </summary>
         public ObservableCollection<Formula> Formulas { get; } = new ObservableCollection<Formula>();
-                
+
+        #region SelectedFormula Property
         private Formula selectedFormula;
                         
         public Formula SelectedFormula
@@ -33,9 +34,8 @@ namespace MathExpressions
                 OnPropertyChanged("SelectedFormula");
             }
         }
-
-
-
+        #endregion
+        
 
         public MainWindow()
         {
@@ -44,7 +44,6 @@ namespace MathExpressions
             UpdateFormulasOnDisplay();
 
             DataContext = this;
-
         }
 
         /// <summary>
@@ -79,7 +78,13 @@ namespace MathExpressions
                 {
                     MessageBox.Show(ex.Message,
                         "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                }                
+                }
+                catch (InvalidOperationException) 
+                {
+                    // Срабатывает, если стек, используемый для вычисления формулы, пустой и была попытка удалить объект из него
+                    MessageBox.Show("Ошибка. Проверьте корректность формулы",
+                       "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
