@@ -20,13 +20,12 @@
         
         <Label Content="Формулы" Grid.Row="0" Grid.Column="0"/>
             
-        <!--Таблица с формулами-->
+        <!--Список с формулами-->
         <ListBox x:Name="ListOfFormulas" Grid.Row="1" Grid.Column="0"
                     ItemsSource="{Binding Formulas}"
                     SelectedItem="{Binding SelectedFormula}"
                     DisplayMemberPath="Infix"
                     Margin="2,0,2,4" >
-
         </ListBox>
 
         <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,2,0">
@@ -34,25 +33,19 @@
             <Button x:Name="CalculateButton" Content="Вычислить" Margin="4,0,0,0" VerticalAlignment="Center" Height="24" Padding="5,1" Click="CalculateButton_Click"></Button>
         </StackPanel>
 
-
-
-
-
         <Label Content="Параметры формулы" Grid.Row="0" Grid.Column="1"/>
         <!--Таблица для ввода значений параметров формулы-->
         <DataGrid  AutoGenerateColumns="False" Grid.Row="1" Grid.Column="1"
                 ItemsSource="{Binding SelectedFormula.Params}" Margin="2,0,2,4">
-        <DataGrid.Columns>
-            <DataGridTextColumn Header="Параметр" Binding="{Binding Param}" IsReadOnly="True"/>
-            <DataGridTextColumn Header="Значение параметра" Binding="{Binding Value}"/>
-        </DataGrid.Columns>
-    </DataGrid>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Параметр" Binding="{Binding Param}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Значение параметра" Binding="{Binding Value}"/>
+            </DataGrid.Columns>
+        </DataGrid>
         <DockPanel Grid.Row="2" Grid.Column="2" Margin="2,0,2,2" >
             <Label Content="Результат:" DockPanel.Dock="Left"/>
             <TextBox x:Name="Result_TextBox" Background="#FFF0F0F0" IsReadOnly="True" DockPanel.Dock="Left" FontSize="16" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-        </DockPanel>
-        
-        
+        </DockPanel>       
         
     </Grid>
 </Window>
